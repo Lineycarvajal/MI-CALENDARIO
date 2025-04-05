@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendario liney</title>
+    <style>
+        :root {
+            --pink-dark: #ff66a3;
+            --pink-medium: #ff85b2;
+            --pink-light: #ffb6c1;
+            --pink-soft: #ffe6f2;
+            --pink-bg: #ffebf3;
+            --white: #ffffff;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: var(--pink-bg);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            background-image: url('https://i.pinimg.com/originals/2e/28/9e/2e289e56a8f2a0f5f7a2e8e5e5f5e5f5.jpg');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.3);
+            padding: 30px;
+            border: 5px solid var(--pink-dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calendar-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notes-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hello-kitty {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="white" stroke="%23000" stroke-width="2"/><circle cx="35" cy="40" r="10" fill="white" stroke="%23000" stroke-width="2"/><circle cx="65" cy="40" r="10" fill="white" stroke="%23000" stroke-width="2"/><circle cx="35" cy="40" r="4" fill="%23000"/><circle cx="65" cy="40" r="4" fill="%23000"/><ellipse cx="50" cy="60" rx="15" ry="10" fill="none" stroke="%23000" stroke-width="2"/><path d="M30,25 Q50,15 70,25" fill="none" stroke="%23000" stroke-width="2"/><path d="M40,80 Q50,90 60,80" fill="none" stroke="%23000" stroke-width="2"/><path d="M20,50 Q30,45 35,50" fill="none" stroke="%23000" stroke-width="2"/><path d="M65,50 Q70,45 80,50" fill="none" stroke="%23000" stroke-width="2"/><path d="M40,30 L45,20" fill="none" stroke="%23000" stroke-width="2"/><path d="M60,30 L55,20" fill="none" stroke="%23000" stroke-width="2"/></svg>');
+            background-size: contain;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .kitty-1 { top: 10px; left: 10px; transform: rotate(-15deg); }
+        .kitty-2 { bottom: 10px; right: 10px; transform: rotate(15deg); }
+        .kitty-3 { top: 50%; left: -40px; transform: rotate(-90deg); }
+        .kitty-4 { top: 50%; right: -40px; transform: rotate(90deg); }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .title {
+            color: var(--pink-dark);
+            font-size: 28px;
+            margin: 0;
+            text-shadow: 2px 2px 0px rgba(255, 182, 193, 0.7);
+        }
+
+        .subtitle {
+            color: var(--pink-medium);
+            font-size: 16px;
+            margin: 5px 0 0;
+        }
+
+        .current-date {
+            background-color: var(--pink-dark);
+            color: var(--white);
+            padding: 15px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-nav button {
+            background-color: var(--pink-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calendar-nav button:hover {
+            background-color: var(--pink-medium);
+            transform: scale(1.1);
+        }
+
+        .month-year {
+            font-weight: bold;
+            color: var(--pink-dark);
+            font-size: 18px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .day-name {
+            text-align: center;
+            font-weight: bold;
+            color: var(--pink-dark);
+            font-size: 14px;
+            padding: 5px;
+        }
+
+        .day {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .day:hover {
+            background-color: var(--pink-soft);
+            transform: scale(1.1);
+        }
+
+        .day.today {
+            background-color: var(--pink-dark);
+            color: var(--white);
+            box-shadow: 0 0 0 3px var(--pink-light);
+        }
+
+        .day.selected {
+            background-color: var(--pink-medium);
+            color: var(--white);
+            box-shadow: 0 0 0 3px var(--pink-dark);
+        }
+
+        .day.other-month {
+            color: #ccc;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .day.has-note::after {
+            content: '📝';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            font-size: 12px;
+        }
+
+        .day.special::before {
+            content: '🎀';
+            position: absolute;
+            top: 0;
+            left: 0;
+            font-size: 12px;
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .notes-date {
+            font-weight: bold;
+            color: var(--pink-dark);
+            font-size: 16px;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed var(--pink-light);
+            border-radius: 15px;
+            padding: 15px;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            resize: none;
+            background-color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: var(--pink-dark);
+            box-shadow: 0 0 10px rgba(255, 102, 163, 0.3);
+        }
+
+        .notes-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .notes-button {
+            flex: 1;
+            background-color: var(--pink-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 20px;
+            padding: 10px;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .notes-button:hover {
+            background-color: var(--pink-medium);
+            transform: scale(1.05);
+        }
+
+        .notes-button.delete {
+            background-color: #ffcccc;
+            color: #ff3333;
+        }
+
+        .motivation-container {
+            background-color: var(--pink-soft);
+            border-radius: 20px;
+            padding: 15px;
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            border: 2px dashed var(--pink-medium);
+        }
+
+        .motivation-character {
+            width: 60px;
+            height: 60px;
+            min-width: 60px;
+            margin-right: 15px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="white" stroke="%23000" stroke-width="2"/><circle cx="35" cy="40" r="10" fill="white" stroke="%23000" stroke-width="2"/><circle cx="65" cy="40" r="10" fill="white" stroke="%23000" stroke-width="2"/><circle cx="35" cy="40" r="4" fill="%23000"/><circle cx="65" cy="40" r="4" fill="%23000"/><path d="M40,60 Q50,70 60,60" fill="none" stroke="%23000" stroke-width="2"/><path d="M30,25 Q50,15 70,25" fill="none" stroke="%23000" stroke-width="2"/><path d="M20,50 Q30,45 35,50" fill="none" stroke="%23000" stroke-width="2"/><path d="M65,50 Q70,45 80,50" fill="none" stroke="%23000" stroke-width="2"/><path d="M40,30 L45,20" fill="none" stroke="%23000" stroke-width="2"/><path d="M60,30 L55,20" fill="none" stroke="%23000" stroke-width="2"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .motivation-message {
+            flex: 1;
+            color: var(--pink-dark);
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .decoration {
+            position: absolute;
+            font-size: 24px;
+            opacity: 0.7;
+            animation: float 3s infinite ease-in-out;
+            z-index: 1;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .dec-1 { top: 15%; left: 5%; animation-delay: 0s; color: var(--pink-dark); }
+        .dec-2 { top: 70%; left: 80%; animation-delay: 0.5s; color: var(--pink-medium); }
+        .dec-3 { top: 30%; right: 10%; animation-delay: 1s; color: var(--pink-dark); }
+        .dec-4 { bottom: 20%; left: 20%; animation-delay: 1.5s; color: var(--pink-medium); }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background-color: var(--pink-dark);
+            color: var(--white);
+            border-radius: 25px;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.5);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .alert.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Calendar Panel -->
+        <div class="panel calendar-panel">
+            <!-- Hello Kitty decorations -->
+            <div class="hello-kitty kitty-1"></div>
+            <div class="hello-kitty kitty-2"></div>
+            
+            <!-- Floating decorations -->
+            <div class="decoration dec-1">🌸</div>
+            <div class="decoration dec-2">🎀</div>
+            <div class="decoration dec-3">🍰</div>
+            <div class="decoration dec-4">💝</div>
+            
+            <div class="header">
+                <h1 class="title">Calendario liney</h1>
+                <p class="subtitle">¡Organiza tus días con estilo!</p>
+            </div>
+            
+            <div class="current-date" id="current-date">
+                Cargando fecha...
+            </div>
+            
+            <div class="calendar-controls">
+                <div class="calendar-nav">
+                    <button id="prev-year">«</button>
+                    <button id="prev-month">‹</button>
+                </div>
+                
+                <div class="month-year" id="month-year">
+                    Mes Año
+                </div>
+                
+                <div class="calendar-nav">
+                    <button id="next-month">›</button>
+                    <button id="next-year">»</button>
+                </div>
+            </div>
+            
+            <div class="calendar-grid" id="calendar">
+                <!-- Calendar will be generated by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Notes Panel -->
+        <div class="panel notes-panel">
+            <!-- Hello Kitty decorations -->
+            <div class="hello-kitty kitty-3"></div>
+            <div class="hello-kitty kitty-4"></div>
+            
+            <div class="notes-header">
+                <h2 class="title">Mis Notas</h2>
+                <div class="notes-date" id="notes-date">Selecciona un día</div>
+            </div>
+            
+            <textarea class="notes-textarea" id="notes-text" placeholder="Escribe tus notas aquí..."></textarea>
+            
+            <div class="notes-buttons">
+                <button class="notes-button" id="save-note">Guardar Nota</button>
+                <button class="notes-button delete" id="delete-note">Borrar Nota</button>
+            </div>
+            
+            <div class="motivation-container">
+                <div class="motivation-character"></div>
+                <div class="motivation-message" id="motivation-message">
+                    ¡Cargando mensaje motivador del día!
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="alert" id="alert">Mensaje</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Database setup
+            let db;
+            const DB_NAME = 'HelloKittyCalendarDB';
+            const DB_VERSION = 1;
+            const STORE_NAME = 'notes';
+            
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            
+            request.onupgradeneeded = function(event) {
+                db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'date' });
+                }
+            };
+            
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                initApp();
+            };
+            
+            request.onerror = function(event) {
+                console.error('Error al abrir la base de datos:', event.target.error);
+                showAlert('Error al cargar la base de datos', true);
+                // Fallback to localStorage if IndexedDB fails
+                initApp();
+            };
+            
+            // App variables
+            let currentDate = new Date();
+            let selectedDate = null;
+            let currentViewDate = new Date();
+            
+            // DOM elements
+            const currentDateEl = document.getElementById('current-date');
+            const monthYearEl = document.getElementById('month-year');
+            const calendarEl = document.getElementById('calendar');
+            const notesDateEl = document.getElementById('notes-date');
+            const notesTextEl = document.getElementById('notes-text');
+            const saveNoteBtn = document.getElementById('save-note');
+            const deleteNoteBtn = document.getElementById('delete-note');
+            const prevMonthBtn = document.getElementById('prev-month');
+            const nextMonthBtn = document.getElementById('next-month');
+            const prevYearBtn = document.getElementById('prev-year');
+            const nextYearBtn = document.getElementById('next-year');
+            const motivationMessageEl = document.getElementById('motivation-message');
+            const alertEl = document.getElementById('alert');
+            
+            // Initialize the app
+            function initApp() {
+                // Set current date
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                currentDateEl.textContent = currentDate.toLocaleDateString('es-ES', options);
+                
+                // Generate calendar
+                generateCalendar(currentViewDate.getFullYear(), currentViewDate.getMonth());
+                
+                // Show today's motivational message
+                showDailyMotivation();
+                
+                // Event listeners
+                saveNoteBtn.addEventListener('click', saveNote);
+                deleteNoteBtn.addEventListener('click', deleteNote);
+                prevMonthBtn.addEventListener('click', () => navigateMonth(-1));
+                nextMonthBtn.addEventListener('click', () => navigateMonth(1));
+                prevYearBtn.addEventListener('click', () => navigateYear(-1));
+                nextYearBtn.addEventListener('click', () => navigateYear(1));
+                
+                // Select today by default
+                setTimeout(() => {
+                    selectDay(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+                }, 100);
+            }
+            
+            // Calendar functions
+            function generateCalendar(year, month) {
+                // Update month-year display
+                monthYearEl.textContent = new Date(year, month, 1).toLocaleDateString('es-ES', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                }).toUpperCase();
+                
+                // Clear calendar
+                calendarEl.innerHTML = '';
+                
+                // Add day names
+                const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                dayNames.forEach(day => {
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'day-name';
+                    dayEl.textContent = day;
+                    calendarEl.appendChild(dayEl);
+                });
+                
+                // Get first day of month and total days
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const today = currentDate.getDate();
+                const currentMonth = currentDate.getMonth();
+                const currentYear = currentDate.getFullYear();
+                
+                // Add empty cells for days before the first day
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'day other-month';
+                    const prevMonthDays = new Date(year, month, 0).getDate();
+                    emptyDay.textContent = prevMonthDays - firstDay + i + 1;
+                    calendarEl.appendChild(emptyDay);
+                }
+                
+                // Add days of the month
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'day';
+                    dayEl.textContent = day;
+                    
+                    // Check if this is today
+                    if (day === today && month === currentMonth && year === currentYear) {
+                        dayEl.classList.add('today');
+                    }
+                    
+                    // Set data attribute for date
+                    const dateStr = formatDateKey(year, month, day);
+                    dayEl.setAttribute('data-date', dateStr);
+                    
+                    // Check if this date has a note
+                    checkNoteExists(dateStr).then(hasNote => {
+                        if (hasNote) {
+                            dayEl.classList.add('has-note');
+                        }
+                    });
+                    
+                    // Add click event
+                    dayEl.addEventListener('click', () => {
+                        selectDay(year, month, day);
+                    });
+                    
+                    calendarEl.appendChild(dayEl);
+                }
+                
+                // Add some special days randomly
+                markSpecialDays();
+                
+                // Calculate remaining empty cells
+                const totalCells = firstDay + daysInMonth;
+                const remainingCells = 7 - (totalCells % 7);
+                
+                if (remainingCells < 7) {
+                    for (let i = 1; i <= remainingCells; i++) {
+                        const emptyDay = document.createElement('div');
+                        emptyDay.className = 'day other-month';
+                        emptyDay.textContent = i;
+                        calendarEl.appendChild(emptyDay);
+                    }
+                }
+            }
+            
+            function navigateMonth(offset) {
+                currentViewDate.setMonth(currentViewDate.getMonth() + offset);
+                generateCalendar(currentViewDate.getFullYear(), currentViewDate.getMonth());
+            }
+            
+            function navigateYear(offset) {
+                currentViewDate.setFullYear(currentViewDate.getFullYear() + offset);
+                generateCalendar(currentViewDate.getFullYear(), currentViewDate.getMonth());
+            }
+            
+            function markSpecialDays() {
+                const days = document.querySelectorAll('.day:not(.other-month)');
+                const specialDays = [];
+                
+                // Randomly select 3-5 special days
+                const specialCount = Math.floor(Math.random() * 3) + 3;
+                
+                while (specialDays.length < specialCount && days.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * days.length);
+                    if (!specialDays.includes(randomIndex)) {
+                        const dayEl = days[randomIndex];
+                        if (!dayEl.classList.contains('today') && !dayEl.classList.contains('selected')) {
+                            specialDays.push(randomIndex);
+                        }
+                    }
+                }
+                
+                specialDays.forEach(index => {
+                    days[index].classList.add('special');
+                });
+            }
+            
+            // Note functions
+            function selectDay(year, month, day) {
+                // Remove selected class from all days
+                document.querySelectorAll('.day.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked day
+                const dateStr = formatDateKey(year, month, day);
+                const dayEl = document.querySelector(`.day[data-date="${dateStr}"]`);
+                if (dayEl) {
+                    dayEl.classList.add('selected');
+                }
+                
+                // Update selected date
+                selectedDate = { year, month, day };
+                
+                // Update notes header
+                const dateObj = new Date(year, month, day);
+                notesDateEl.textContent = dateObj.toLocaleDateString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+                
+                // Load note for this date
+                getNote(dateStr).then(note => {
+                    notesTextEl.value = note || '';
+                });
+            }
+            
+            function saveNote() {
+                if (!selectedDate) {
+                    showAlert('Selecciona un día primero', true);
+                    return;
+                }
+                
+                const noteText = notesTextEl.value.trim();
+                const dateStr = formatDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+                
+                if (noteText === '') {
+                    deleteNote();
+                    return;
+                }
+                
+                const note = {
+                    date: dateStr,
+                    text: noteText,
+                    createdAt: new Date().toISOString()
+                };
+                
+                saveNoteToDB(note).then(() => {
+                    // Update calendar day
+                    const dayEl = document.querySelector(`.day[data-date="${dateStr}"]`);
+                    if (dayEl) {
+                        dayEl.classList.add('has-note');
+                    }
+                    
+                    showAlert('Nota guardada correctamente 💖');
+                }).catch(error => {
+                    console.error('Error al guardar nota:', error);
+                    showAlert('Error al guardar la nota', true);
+                });
+            }
+            
+            function deleteNote() {
+                if (!selectedDate) {
+                    showAlert('Selecciona un día primero', true);
+                    return;
+                }
+                
+                const dateStr = formatDateKey(selectedDate.year, selectedDate.month, selectedDate.day);
+                
+                deleteNoteFromDB(dateStr).then(() => {
+                    // Update calendar day
+                    const dayEl = document.querySelector(`.day[data-date="${dateStr}"]`);
+                    if (dayEl) {
+                        dayEl.classList.remove('has-note');
+                    }
+                    
+                    // Clear textarea
+                    notesTextEl.value = '';
+                    
+                    showAlert('Nota eliminada 🗑️');
+                }).catch(error => {
+                    console.error('Error al eliminar nota:', error);
+                    showAlert('Error al eliminar la nota', true);
+                });
+            }
+            
+            // Database functions
+            function saveNoteToDB(note) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.put(note);
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            function getNote(dateStr) {
+                return new Promise((resolve) => {
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.get(dateStr);
+                    
+                    request.onsuccess = () => resolve(request.result?.text || '');
+                    request.onerror = () => resolve('');
+                });
+            }
+            
+            function checkNoteExists(dateStr) {
+                return new Promise((resolve) => {
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.get(dateStr);
+                    
+                    request.onsuccess = () => resolve(!!request.result);
+                    request.onerror = () => resolve(false);
+                });
+            }
+            
+            function deleteNoteFromDB(dateStr) {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.delete(dateStr);
+                    
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => reject(request.error);
+                });
+            }
+            
+            // Helper functions
+            function formatDateKey(year, month, day) {
+                return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            }
+            
+            function showDailyMotivation() {
+                const motivations = [
+                    "¡Cada día es una nueva oportunidad para brillar! ✨",
+                    "La perseverancia es la clave del éxito. ¡No te rindas! 💪",
+                    "Sonríe y el mundo sonreirá contigo. 😊",
+                    "Cree en ti misma y todo será posible. 💖",
+                    "Los pequeños pasos también te llevan lejos. 👣",
+                    "Eres capaz de lograr todo lo que te propongas. 🌟",
+                    "La actitud positiva es el camino hacia la felicidad. 🎀",
+                    "Hoy es un día perfecto para ser feliz. 🌈",
+                    "Tus sueños son válidos y posibles. ¡Persíguelos! 💭",
+                    "Tu esfuerzo de hoy es tu éxito de mañana. 🏆"
+                ];
+                
+                // Select a motivation based on the day of the month
+                const dayOfMonth = currentDate.getDate();
+                const index = dayOfMonth % motivations.length;
+                
+                motivationMessageEl.textContent = motivations[index];
+            }
+            
+            function showAlert(message, isError = false) {
+                alertEl.textContent = message;
+                alertEl.style.backgroundColor = isError ? '#ff3333' : '#ff66a3';
+                alertEl.classList.add('show');
+                
+                setTimeout(() => {
+                    alertEl.classList.remove('show');
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
